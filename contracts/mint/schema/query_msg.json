@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QueryMsg",
+  "oneOf": [
+    {
+      "description": "Config returns the stored configuration state. Returns State",
+      "type": "object",
+      "required": [
+        "get_status"
+      ],
+      "properties": {
+        "get_status": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}
