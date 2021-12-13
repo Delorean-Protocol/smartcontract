@@ -8,7 +8,7 @@ use crate::msg::{
 };
 use crate::state::{Config, Metadata, MintStatus, config_read, config_update, status_read, status_update};
 use cosmwasm_std::{
-    to_binary, Addr, BankMsg, Coin, Deps, DepsMut, Env, MessageInfo, QueryResponse,
+    to_binary, Addr, Coin, Deps, DepsMut, Env, MessageInfo, QueryResponse,
     Response, StdResult, SubMsg, WasmMsg, coins
 };
 
@@ -47,9 +47,7 @@ pub fn execute(
             token_uri,
             extension
         } => try_secure_mint(deps, env, info, owner, token_uri, extension),
-         
-        ExecuteMsg::WithdrawFund {} => try_withdraw_fund(deps, env, info),
-   
+    
     }
 }
 
@@ -63,14 +61,6 @@ fn deposit_funds(contract: &Addr, cns: Vec<Coin>) -> Result<SubMsg, ContractErro
         funds: cns,
     });
     Ok(exec)
-}
-
-fn transfer_funds(to: &Addr, cns: Vec<Coin>) -> Result<BankMsg, ContractError> {
-    let msg = BankMsg::Send {
-        to_address: to.to_string(),
-        amount: cns,
-    };
-    Ok(msg)
 }
 
 fn mint_nft(to: String,token_id: String, nft_contract: &Addr, extension: &Metadata, token_uri : Option<String>) -> Result<SubMsg, ContractError> {
@@ -104,22 +94,6 @@ pub fn try_config_update(
     Ok(Response::default())
 }
 
-pub fn try_withdraw_fund(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-) -> Result<Response, ContractError> {
-    let config_state = config_read(deps.storage).load()?;
-    if info.sender != config_state.admin {
-        return Err(Unauthorized {}.build());
-    }
-    let balance = deps.querier.query_all_balances(&_env.contract.address)?;
-    let fund_msg = transfer_funds(&info.sender, balance)?;
-
-    Ok(Response::new()
-    .add_message(fund_msg))
-}
-
 pub fn try_mint(
     deps: DepsMut,
     _env: Env,
@@ -141,7 +115,7 @@ pub fn try_mint(
     }
     let mut mintstatus = status_read(deps.storage).load()?;
 
-      // Stage wallet limit check
+      // limit check
     if mintstatus.mint_count + mint_count > config.mint_limit {
         return Err(ContractError::MintLimitReached {});
     }
@@ -174,12 +148,7 @@ pub fn try_secure_mint(
         return Err(Unauthorized {}.build());
     }
 
-    let mut mintstatus = status_read(deps.storage).load()?;
-
-        // Stage wallet limit check
-    if mintstatus.mint_count + 1 > config.mint_limit {
-        return Err(ContractError::MintLimitReached {});
-    }
+    let mut mintstatus = status_read(deps.storage).load()?;    
     let token_id = mintstatus.mint_count + 1;
     mintstatus.mint_count = token_id;
 

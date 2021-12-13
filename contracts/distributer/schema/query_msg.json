@@ -3,14 +3,21 @@
   "title": "QueryMsg",
   "oneOf": [
     {
-      "description": "Config returns the stored configuration state. Returns State",
       "type": "object",
       "required": [
-        "status"
+        "claim_status"
       ],
       "properties": {
-        "status": {
-          "type": "object"
+        "claim_status": {
+          "type": "object",
+          "required": [
+            "wallet"
+          ],
+          "properties": {
+            "wallet": {
+              "type": "string"
+            }
+          }
         }
       },
       "additionalProperties": false

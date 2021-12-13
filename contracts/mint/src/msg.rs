@@ -19,8 +19,7 @@ pub enum ExecuteMsg {
         owner: String,
         token_uri: Option<String>,
         extension: Metadata,
-    },
-    WithdrawFund {},
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
