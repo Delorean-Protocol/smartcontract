@@ -6,9 +6,9 @@ use cosmwasm_storage::{
     singleton, singleton_read, ReadonlySingleton,
     Singleton,
 };
-pub static CONFIG_KEY: &[u8] = b"config_1sd&23";
-pub static WINNERS_KEY: &[u8] = b"winners_1gasd2";
-pub static ROUNDINFO_KEY: &[u8] = b"round_info_12fas";
+const CONFIG_KEY: &str = "config_1sd&23";
+const WINNERS_KEY: &str = "winners_1gasd2";
+const ROUNDINFO_KEY: &str = "round_info_12fas";
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {

@@ -16,7 +16,6 @@ fn delorean_distributer_test() {
     let admin = String::from("admin");
     let treasury = String::from("tressury");
     let team_fund = String::from("team_fund");
-    let user1 = String::from("user1");
    
 
     let admin_info = mock_info(&admin, &[]);

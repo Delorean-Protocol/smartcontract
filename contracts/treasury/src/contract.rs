@@ -5,7 +5,7 @@ use crate::errors::{ContractError, Unauthorized};
 use crate::msg::{
     ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, AnchorExecuteMsg, MigrateMsg
 };
-use crate::state::{Config, config_read, config_update};
+use crate::state::{Config, CONFIG};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, BankMsg, Coin, Deps, DepsMut, Env, MessageInfo, QueryResponse,
     Response, StdResult, SubMsg, WasmMsg
@@ -17,7 +17,7 @@ pub fn instantiate(
     _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    config_update(deps.storage).save(&msg.config)?;
+    CONFIG.save(deps.storage, &msg.config)?;
     Ok(Response::default())
 }
 
@@ -53,11 +53,11 @@ pub fn try_config_update(
     info: MessageInfo,
     new_config : Config
 ) -> Result<Response, ContractError> {
-    let mut _config = config_read(deps.storage).load()?;
+    let mut _config = CONFIG.load(deps.storage)?;
     if info.sender != _config.admin {
         return Err(Unauthorized {}.build());
     }
-    config_update(deps.storage).save(&new_config)?;
+    CONFIG.save(deps.storage, &new_config)?;
 
     Ok(Response::default())
 }
@@ -67,7 +67,7 @@ pub fn try_withdraw_fund(
     _env: Env,
     info: MessageInfo,
 ) -> Result<Response, ContractError> {
-    let config_state = config_read(deps.storage).load()?;
+    let config_state = CONFIG.load(deps.storage)?;
     if info.sender != config_state.admin {
         return Err(Unauthorized {}.build());
     }
@@ -95,7 +95,7 @@ pub fn try_deposit(
     info: MessageInfo,
 ) -> Result<Response, ContractError> {
     let sent_funds = info.funds.clone();
-    let config = config_read(deps.storage).load()?; 
+    let config = CONFIG.load(deps.storage)?;
     
     Ok(Response::new().add_submessage(acnchor_deposit(config.anchor_smart_contract.clone().to_string(), sent_funds.clone())?))
 }
@@ -112,7 +112,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
 }
 
 fn get_config(deps: Deps, _env: Env) -> StdResult<QueryResponse> {
-    let state = config_read(deps.storage).load()?;
+    let state = CONFIG.load(deps.storage)?;
     let rsp = ConfigResponse { config: state };
     to_binary(&rsp)
 }

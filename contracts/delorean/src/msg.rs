@@ -19,6 +19,9 @@ pub enum ExecuteMsg {
     RoundUpdate {
         round_info : RoundInfo
     },
+    ClaimPrize {
+        burn_nft_id : String
+    },
     Mint {
         nft_type : u32
     },
@@ -41,7 +44,7 @@ pub enum FundDepositMsg {
 pub enum SecureMintMsg {
     SecureMint {
         owner: String,
-        token_uri: Option<String>,
+        token_uri: String,
         extension: Metadata,
     }
 }
