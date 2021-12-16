@@ -1,14 +1,11 @@
-
-
-
 use crate::errors::{ContractError, Unauthorized};
 use crate::msg::{
-    ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, AnchorExecuteMsg, MigrateMsg
+    AnchorExecuteMsg, ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg,
 };
 use crate::state::{Config, CONFIG};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, BankMsg, Coin, Deps, DepsMut, Env, MessageInfo, QueryResponse,
-    Response, StdResult, SubMsg, WasmMsg
+    Response, StdResult, SubMsg, WasmMsg,
 };
 
 pub fn instantiate(
@@ -28,17 +25,12 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-     
-        ExecuteMsg::ConfigUpdate {
-           config
-        } => try_config_update(deps, env, info, config),
-         
-        ExecuteMsg::Deposit {} => try_deposit(deps,env,info),
+        ExecuteMsg::ConfigUpdate { config } => try_config_update(deps, env, info, config),
+
+        ExecuteMsg::Deposit {} => try_deposit(deps, env, info),
         ExecuteMsg::WithdrawFund {} => try_withdraw_fund(deps, env, info),
-   
     }
 }
-
 
 fn transfer_funds(to: &Addr, cns: Vec<Coin>) -> BankMsg {
     return BankMsg::Send {
@@ -51,7 +43,7 @@ pub fn try_config_update(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    new_config : Config
+    new_config: Config,
 ) -> Result<Response, ContractError> {
     let mut _config = CONFIG.load(deps.storage)?;
     if info.sender != _config.admin {
@@ -73,13 +65,11 @@ pub fn try_withdraw_fund(
     }
     let balance = deps.querier.query_all_balances(&_env.contract.address)?;
 
-    Ok(Response::new()
-    .add_message(transfer_funds(&info.sender, balance)))
+    Ok(Response::new().add_message(transfer_funds(&info.sender, balance)))
 }
 
-fn acnchor_deposit(contract_addr : String, coins: Vec<Coin>) -> Result<SubMsg, ContractError> {
-    let msg = AnchorExecuteMsg::DepositStable {
-    };
+fn acnchor_deposit(contract_addr: String, coins: Vec<Coin>) -> Result<SubMsg, ContractError> {
+    let msg = AnchorExecuteMsg::DepositStable {};
     let exec = SubMsg::new(WasmMsg::Execute {
         contract_addr: contract_addr,
         msg: to_binary(&msg)?,
@@ -88,20 +78,18 @@ fn acnchor_deposit(contract_addr : String, coins: Vec<Coin>) -> Result<SubMsg, C
     Ok(exec)
 }
 
-
-pub fn try_deposit(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-) -> Result<Response, ContractError> {
+pub fn try_deposit(deps: DepsMut, _env: Env, info: MessageInfo) -> Result<Response, ContractError> {
     let sent_funds = info.funds.clone();
     let config = CONFIG.load(deps.storage)?;
-    
-    Ok(Response::new().add_submessage(acnchor_deposit(config.anchor_smart_contract.clone().to_string(), sent_funds.clone())?))
+
+    Ok(Response::new().add_submessage(acnchor_deposit(
+        config.anchor_smart_contract.clone().to_string(),
+        sent_funds.clone(),
+    )?))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg ) -> Result<Response, ContractError> {
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
     Ok(Response::default())
 }
 
@@ -116,4 +104,3 @@ fn get_config(deps: Deps, _env: Env) -> StdResult<QueryResponse> {
     let rsp = ConfigResponse { config: state };
     to_binary(&rsp)
 }
-

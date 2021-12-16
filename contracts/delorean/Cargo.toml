@@ -30,15 +30,17 @@ overflow-checks = true
 # for quicker tests, cargo test --lib
 # for more explicit tests, cargo test --features=backtraces
 backtraces = ["cosmwasm-std/backtraces"]
+default = ["cranelift"]
+cranelift = ["cosmwasm-vm/cranelift"]
 
 [dependencies]
-terra-cosmwasm = "2.2.0"
 cosmwasm-std = { version = "0.16.2" }
-cosmwasm-storage = { version = "0.16.2" }
 schemars = "0.8.1"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 snafu = { version = "0.6.3" }
 thiserror = { version = "1.0.23" }
+cw-storage-plus = { version = "0.9.1" }
 
 [dev-dependencies]
 cosmwasm-schema = { version = "0.16.2" }
+cosmwasm-vm = { version = "0.16.2" }

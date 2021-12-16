@@ -1,23 +1,19 @@
+use crate::state::Config;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::state::{Config};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
-   pub config : Config
+    pub config: Config,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    Deposit {
-    },
-    ConfigUpdate {
-        config : Config
-    },
+    Deposit {},
+    ConfigUpdate { config: Config },
     WithdrawFund {},
 }
-
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MigrateMsg {}
@@ -25,16 +21,13 @@ pub struct MigrateMsg {}
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum AnchorExecuteMsg {
-    DepositStable {
-    }
+    DepositStable {},
 }
-
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
-    Config {
-    }
+    Config {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

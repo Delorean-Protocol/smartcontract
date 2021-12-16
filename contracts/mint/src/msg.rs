@@ -1,27 +1,25 @@
+use crate::state::{Config, Metadata, MintStatus};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::state::{Config, MintStatus, Metadata};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
-   pub config : Config
+    pub config: Config,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
     ConfigUpdate {
-        config : Config
+        config: Config,
     },
-    Mint {
-    },
+    Mint {},
     SecureMint {
         owner: String,
         token_uri: String,
         extension: Metadata,
-    }
+    },
 }
-
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MigrateMsg {}
@@ -29,7 +27,7 @@ pub struct MigrateMsg {}
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum NftExecuteMsg {
-    Mint { 
+    Mint {
         token_id: String,
         /// The owner of the newly minter NFT
         owner: String,
@@ -38,26 +36,22 @@ pub enum NftExecuteMsg {
         /// Metadata JSON Schema
         token_uri: String,
         /// Any custom extension used by this contract
-        extension: Metadata, 
-    }
+        extension: Metadata,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum FundDepositExecuteMsg {
-    Deposit {}
+    Deposit {},
 }
-
-
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     /// Config returns the stored configuration state. Returns State
-    Status {
-    },
-    Config {
-    }
+    Status {},
+    Config {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

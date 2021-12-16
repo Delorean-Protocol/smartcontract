@@ -1,42 +1,41 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Storage, Coin, Uint128};
-use cosmwasm_storage::{
-    singleton, singleton_read, ReadonlySingleton,
-    Singleton,
-};
+use cosmwasm_std::{Coin, Uint128};
+use cw_storage_plus::Item;
+
 const CONFIG_KEY: &str = "config_1sd&23";
 const WINNERS_KEY: &str = "winners_1gasd2";
 const ROUNDINFO_KEY: &str = "round_info_12fas";
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
-    pub admin: Addr,
-    pub mint_contract: Addr,
-    pub nfts : Vec<NftMetaInfo>
+    pub admin: String,
+    pub mint_contract: String,
+    pub nft_contract: String,
+    pub nfts: Vec<NftMetaInfo>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct NftMetaInfo {
-   pub nft_metadata: Metadata,
-   pub price : Coin,
-   pub shares: Vec<FundShare>
+    pub nft_metadata: Metadata,
+    pub price: Coin,
+    pub shares: Vec<FundShare>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct RoundInfo {
-   pub active: bool,
-   pub start_date : u64,
-   pub end_date : u64,
-   pub name : String
+    pub active: bool,
+    pub start_date: u64,
+    pub end_date: u64,
+    pub name: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct FundShare {
-    pub address: Addr,
+    pub address: String,
     pub note: String,
-    pub share: u32 // in decimal of 100
+    pub share: u32, // in decimal of 100
 }
 
 impl FundShare {
@@ -68,40 +67,13 @@ pub struct Metadata {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct WinnerItem {
-    pub winner : String,
-    pub winner_amount : Coin,
-    pub claim_end_time : u64,
-    pub claimed : bool
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct WinnerInfo {
-    pub winners : Vec<WinnerItem>
+    pub winner_address: String,
+    pub winner_amount: Coin,
+    pub claim_end_time: u64,
+    pub claimed: bool,
 }
 
-
-
-pub fn config_update(storage: &mut dyn Storage) -> Singleton<Config> {
-    singleton(storage, CONFIG_KEY)
-}
-
-pub fn config_read(storage: &dyn Storage) -> ReadonlySingleton<Config> {
-    singleton_read(storage, CONFIG_KEY)
-}
-
-pub fn round_read(storage: &dyn Storage) -> ReadonlySingleton<RoundInfo> {
-    singleton_read(storage, ROUNDINFO_KEY)
-}
-
-pub fn round_update(storage: &mut dyn Storage) -> Singleton<RoundInfo> {
-    singleton(storage, ROUNDINFO_KEY)
-}
-
-pub fn winner_read(storage: &dyn Storage) -> ReadonlySingleton<WinnerInfo> {
-    singleton_read(storage, WINNERS_KEY)
-}
-
-pub fn winner_update(storage: &mut dyn Storage) -> Singleton<WinnerInfo> {
-    singleton(storage, WINNERS_KEY)
-}
+pub const CONFIG: Item<Config> = Item::new(CONFIG_KEY);
+pub const ROUND_INFO: Item<RoundInfo> = Item::new(ROUNDINFO_KEY);
+pub const WINNER_INFO: Item<WinnerInfo> = Item::new(WINNERS_KEY);

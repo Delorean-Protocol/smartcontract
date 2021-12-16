@@ -1,8 +1,8 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{ Uint128};
-use cw_storage_plus::{ Map, Item };
+use cosmwasm_std::Uint128;
+use cw_storage_plus::{Item, Map};
 pub const CONFIG_KEY: &str = "config";
 pub const FUNDSTATE_KEY: &str = "fund_state";
 pub const CLAIMED_STATE_KEY: &str = "claim_state";
@@ -10,14 +10,14 @@ pub const CLAIMED_STATE_KEY: &str = "claim_state";
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: String,
-    pub shares: Vec<FundShare>
+    pub shares: Vec<FundShare>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct FundShare {
     pub address: String,
     pub note: String,
-    pub share: u32 // in decimal of 100
+    pub share: u32, // in decimal of 100
 }
 
 impl FundShare {
