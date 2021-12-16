@@ -3,17 +3,28 @@
   "title": "InstantiateMsg",
   "type": "object",
   "required": [
-    "maker",
-    "taker"
+    "config"
   ],
   "properties": {
-    "maker": {
-      "type": "integer",
-      "format": "int32"
-    },
-    "taker": {
-      "type": "integer",
-      "format": "int32"
+    "config": {
+      "$ref": "#/definitions/Config"
+    }
+  },
+  "definitions": {
+    "Config": {
+      "type": "object",
+      "required": [
+        "admin",
+        "anchor_smart_contract"
+      ],
+      "properties": {
+        "admin": {
+          "type": "string"
+        },
+        "anchor_smart_contract": {
+          "type": "string"
+        }
+      }
     }
   }
 }

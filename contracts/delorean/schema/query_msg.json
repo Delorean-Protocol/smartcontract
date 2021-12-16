@@ -3,13 +3,36 @@
   "title": "QueryMsg",
   "oneOf": [
     {
-      "description": "Config returns the stored configuration state. Returns State",
       "type": "object",
       "required": [
-        "get_status"
+        "config"
       ],
       "properties": {
-        "get_status": {
+        "config": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "winners"
+      ],
+      "properties": {
+        "winners": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "round_info"
+      ],
+      "properties": {
+        "round_info": {
           "type": "object"
         }
       },
