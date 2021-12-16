@@ -1,14 +1,12 @@
-
-
 use std::ops::Div;
 
 use crate::errors::{ContractError, Unauthorized};
 use crate::msg::{
-    StatusResponse, ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, NftExecuteMsg, FundDepositExecuteMsg
+    StatusResponse, ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, NftExecuteMsg, FundDepositExecuteMsg, MigrateMsg
 };
-use crate::state::{Config, Metadata, MintStatus, config_read, config_update, status_read, status_update};
+use crate::state::{Config, Metadata, MintStatus, CONFIG, MINTSTATUS};
 use cosmwasm_std::{
-    to_binary, Addr, Coin, Deps, DepsMut, Env, MessageInfo, QueryResponse,
+    entry_point, to_binary, Coin, Deps, DepsMut, Env, MessageInfo, QueryResponse,
     Response, StdResult, SubMsg, WasmMsg, coins
 };
 
@@ -22,8 +20,8 @@ pub fn instantiate(
         mint_count:0
     };
 
-    config_update(deps.storage).save(&msg.config)?;
-    status_update(deps.storage).save(&status)?;
+    CONFIG.save(deps.storage, &msg.config)?;
+    MINTSTATUS.save(deps.storage, &status)?;
     Ok(Response::default())
 }
 
@@ -52,18 +50,18 @@ pub fn execute(
 }
 
 
-fn deposit_funds(contract: &Addr, cns: Vec<Coin>) -> Result<SubMsg, ContractError> {
+fn deposit_funds(contract: String, cns: Vec<Coin>) -> Result<SubMsg, ContractError> {
     let msg = FundDepositExecuteMsg::Deposit {
     };
     let exec = SubMsg::new(WasmMsg::Execute {
-        contract_addr: contract.to_string(),
+        contract_addr: contract,
         msg: to_binary(&msg)?,
         funds: cns,
     });
     Ok(exec)
 }
 
-fn mint_nft(to: String,token_id: String, nft_contract: &Addr, extension: &Metadata, token_uri : Option<String>) -> Result<SubMsg, ContractError> {
+fn mint_nft(to: String,token_id: String, nft_contract: String, extension: &Metadata, token_uri : String) -> Result<SubMsg, ContractError> {
     let msg = NftExecuteMsg::Mint {
         owner: to,
         token_id: token_id,
@@ -71,7 +69,7 @@ fn mint_nft(to: String,token_id: String, nft_contract: &Addr, extension: &Metada
         token_uri : token_uri
     };
     let exec = SubMsg::new(WasmMsg::Execute {
-        contract_addr: nft_contract.to_string(),
+        contract_addr: nft_contract,
         msg: to_binary(&msg)?,
         funds: vec![],
     });
@@ -85,11 +83,11 @@ pub fn try_config_update(
     info: MessageInfo,
     new_config : Config
 ) -> Result<Response, ContractError> {
-    let mut _config = config_read(deps.storage).load()?;
+    let mut _config = CONFIG.load(deps.storage)?;
     if info.sender != _config.admin {
         return Err(Unauthorized {}.build());
     }
-    config_update(deps.storage).save(&new_config)?;
+    CONFIG.save(deps.storage, &new_config)?;
 
     Ok(Response::default())
 }
@@ -99,7 +97,7 @@ pub fn try_mint(
     _env: Env,
     info: MessageInfo,
 ) -> Result<Response, ContractError> {
-    let config = config_read(deps.storage).load()?;
+    let config = CONFIG.load(deps.storage)?;
     let sent_funds = info.funds.clone();
     let mint_count:u32;
     if sent_funds.is_empty() {
@@ -113,7 +111,7 @@ pub fn try_mint(
     if mint_count != 1{
         return Err(ContractError::InsufficientFund {});
     }
-    let mut mintstatus = status_read(deps.storage).load()?;
+    let mut mintstatus = MINTSTATUS.load(deps.storage)?;
 
       // limit check
     if mintstatus.mint_count + mint_count > config.mint_limit {
@@ -122,17 +120,18 @@ pub fn try_mint(
     let token_id = mintstatus.mint_count + mint_count;
     mintstatus.mint_count = token_id;
 
-    mint_nft(info.sender.clone().to_string(), token_id.clone().to_string(), &config.nft_contract, &config.nft_metadata, None)?;
-
-
+    let submsg= mint_nft(info.sender.clone().to_string(), token_id.clone().to_string(), config.nft_contract.clone(), &config.nft_metadata, "".to_string())?;
+   
+    let mut msgs: Vec<SubMsg> = vec![];
+    msgs.push(submsg);
     for fund_share in config.shares {
        let amount = fund_share.get_share(sent_funds[0].clone().amount).u128();
-       deposit_funds(&fund_share.address, coins(amount, sent_funds[0].clone().denom ) )?;
+       msgs.push(deposit_funds(fund_share.address.clone(), coins(amount, sent_funds[0].clone().denom ) )?);
     };
 
-
-    status_update(deps.storage).save(&mintstatus)?;
-    Ok(Response::default())
+    MINTSTATUS.save(deps.storage, &mintstatus)?;
+    Ok(Response::default().add_submessages(msgs).add_attribute("action", "mint_nft_1")
+    .add_attribute("token_id", token_id.clone().to_string()))
 }
 
 pub fn try_secure_mint(
@@ -140,25 +139,30 @@ pub fn try_secure_mint(
     _env: Env,
     info: MessageInfo,
     owner: String,
-    token_uri : Option<String>,
+    token_uri : String,
     extension : Metadata
 ) -> Result<Response, ContractError> {
-    let config = config_read(deps.storage).load()?;
+    let config = CONFIG.load(deps.storage)?;
     if !(info.sender == config.admin || info.sender == config.minter) {
         return Err(Unauthorized {}.build());
     }
 
-    let mut mintstatus = status_read(deps.storage).load()?;    
+    let mut mintstatus = MINTSTATUS.load(deps.storage)?; 
     let token_id = mintstatus.mint_count + 1;
     mintstatus.mint_count = token_id;
 
-    mint_nft(owner.clone(), token_id.clone().to_string(), &config.nft_contract, &extension, token_uri)?;
+    mint_nft(owner.clone(), token_id.clone().to_string(), config.nft_contract.clone(), &extension, token_uri)?;
 
-    status_update(deps.storage).save(&mintstatus)?;
+    MINTSTATUS.save(deps.storage, &mintstatus)?;
     
-    Ok(Response::default())
+    Ok(Response::default().add_attribute("action", "secure_mint_nft")
+    .add_attribute("token_id", token_id.clone().to_string()))
 }
 
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg ) -> Result<Response, ContractError> {
+    Ok(Response::default())
+}
 
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
     match msg {
@@ -168,13 +172,13 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
 }
 
 fn get_status(deps: Deps, _env: Env) -> StdResult<QueryResponse> {
-    let st = status_read(deps.storage).load()?;
+    let st = MINTSTATUS.load(deps.storage)?;
     let rsp = StatusResponse { mint_status: st };
     to_binary(&rsp)
 }
 
 fn get_config(deps: Deps, _env: Env) -> StdResult<QueryResponse> {
-    let state = config_read(deps.storage).load()?;
+    let state = CONFIG.load(deps.storage)?;
     let rsp = ConfigResponse { config: state };
     to_binary(&rsp)
 }

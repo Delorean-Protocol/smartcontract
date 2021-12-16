@@ -1,10 +1,10 @@
 use crate::errors::{ContractError, Unauthorized};
 use crate::msg::{
-    ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, ClaimStatusResponse
+    ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, ClaimStatusResponse,  MigrateMsg
 };
 use crate::state::{Config, CONFIG, FUND_STATE, CLAIM_STATE};
 use cosmwasm_std::{
-    to_binary, Addr, BankMsg, Coin, Deps, DepsMut, Env, MessageInfo, QueryResponse,
+    entry_point, to_binary, Addr, BankMsg, Coin, Deps, DepsMut, Env, MessageInfo, QueryResponse,
     Response, StdResult, Uint128, coins
 };
 
@@ -19,6 +19,12 @@ pub fn instantiate(
     FUND_STATE.save(deps.storage, &i)?;
     Ok(Response::default())
 }
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg ) -> Result<Response, ContractError> {
+    Ok(Response::default())
+}
+
 
 pub fn execute(
     deps: DepsMut,
@@ -39,12 +45,11 @@ pub fn execute(
 }
 
 
-fn transfer_funds(to: &Addr, cns: Vec<Coin>) -> Result<BankMsg, ContractError> {
-    let msg = BankMsg::Send {
+fn transfer_funds(to: &Addr, cns: Vec<Coin>) -> BankMsg {
+    return BankMsg::Send {
         to_address: to.to_string(),
         amount: cns,
-    };
-    Ok(msg)
+    }
 }
 
 pub fn try_config_update(
@@ -77,10 +82,12 @@ pub fn try_claim(
             break;
         }
      };
+    
     if found == None {
         return Err(ContractError::NotFound {});    
     }else { 
         let funds = FUND_STATE.load(deps.storage)?;
+        let claimable_ust;
         let claimed_ust = CLAIM_STATE.may_load(deps.storage, &wallet.to_string())?;
         let mut claimable:Uint128 = funds.clone();
         match claimed_ust {
@@ -90,12 +97,15 @@ pub fn try_claim(
             }
         }
         let share = found.unwrap();
-        let claimable_ust =  share.get_share(claimable);
+        claimable_ust =  share.get_share(claimable);
         CLAIM_STATE.save(deps.storage, &wallet.to_string(), &claimable)?;
-        transfer_funds(&wallet, coins(claimable_ust.u128(), "uusd"))?;
-    }
+        
 
-    Ok(Response::new())
+        Ok(Response::new().add_attribute("action", "claim")
+        .add_attribute("ust", claimable_ust.to_string())
+        .add_attribute("wallet", wallet.clone().to_string())
+        .add_message(transfer_funds(&wallet, coins(claimable_ust.u128(), "uusd"))))
+    }
 }
 
 

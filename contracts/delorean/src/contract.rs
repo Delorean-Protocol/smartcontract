@@ -1,10 +1,10 @@
 use crate::errors::{ContractError, Unauthorized};
 use crate::msg::{
-    ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, FundDepositMsg, WinnersResponse, RoundInfoResponse, SecureMintMsg
+    ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, FundDepositMsg, WinnersResponse, RoundInfoResponse, SecureMintMsg, MigrateMsg
 };
 use crate::state::{Config,Metadata, config_read, config_update, round_read, round_update, winner_read, winner_update, WinnerItem, WinnerInfo, RoundInfo};
 use cosmwasm_std::{
-    to_binary, Addr, Coin, coin, Deps, DepsMut, Env, MessageInfo, QueryResponse,
+    entry_point, to_binary, Addr, Coin, coin, Deps, DepsMut, Env, MessageInfo, QueryResponse,
     Response, StdResult, SubMsg, WasmMsg
 };
 
@@ -15,6 +15,11 @@ pub fn instantiate(
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     config_update(deps.storage).save(&msg.config)?;
+    Ok(Response::default())
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg ) -> Result<Response, ContractError> {
     Ok(Response::default())
 }
 

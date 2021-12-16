@@ -1,19 +1,16 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Coin, Storage, Uint128};
-use cosmwasm_storage::{
-    singleton, singleton_read, ReadonlySingleton,
-    Singleton,
-};
-pub static CONFIG_KEY: &[u8] = b"config";
-pub static MINT_STATUS_KEY: &[u8] = b"mint_status";
+use cosmwasm_std::{Coin, Uint128};
+use cw_storage_plus::{ Item };
+const  CONFIG_KEY: &str  = "config";
+const  MINT_STATUS_KEY: &str = "mint_status";
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
-    pub admin: Addr,
-    pub minter: Addr,
-    pub nft_contract: Addr,
+    pub admin: String,
+    pub minter: String,
+    pub nft_contract: String,
     pub nft_metadata: Metadata,
     pub shares: Vec<FundShare>,
     pub price : Coin,
@@ -27,7 +24,7 @@ pub struct MintStatus {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct FundShare {
-    pub address: Addr,
+    pub address: String,
     pub note: String,
     pub share: u32 // in decimal of 100
 }
@@ -62,19 +59,5 @@ impl FundShare {
 }
 
 
-
-pub fn config_update(storage: &mut dyn Storage) -> Singleton<Config> {
-    singleton(storage, CONFIG_KEY)
-}
-
-pub fn config_read(storage: &dyn Storage) -> ReadonlySingleton<Config> {
-    singleton_read(storage, CONFIG_KEY)
-}
-
-pub fn status_update(storage: &mut dyn Storage) -> Singleton<MintStatus> {
-    singleton(storage, MINT_STATUS_KEY)
-}
-
-pub fn status_read(storage: &dyn Storage) -> ReadonlySingleton<MintStatus> {
-    singleton_read(storage, MINT_STATUS_KEY)
-}
+pub const CONFIG: Item<Config> = Item::new(CONFIG_KEY);
+pub const MINTSTATUS: Item<MintStatus> = Item::new(MINT_STATUS_KEY);

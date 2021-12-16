@@ -17,10 +17,14 @@ pub enum ExecuteMsg {
     },
     SecureMint {
         owner: String,
-        token_uri: Option<String>,
+        token_uri: String,
         extension: Metadata,
     }
 }
+
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct MigrateMsg {}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -32,7 +36,7 @@ pub enum NftExecuteMsg {
         /// Universal resource identifier for this NFT
         /// Should point to a JSON file that conforms to the ERC721
         /// Metadata JSON Schema
-        token_uri: Option<String>,
+        token_uri: String,
         /// Any custom extension used by this contract
         extension: Metadata, 
     }

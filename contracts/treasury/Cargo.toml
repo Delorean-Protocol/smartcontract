@@ -2,7 +2,7 @@
 name = "delorean_treasury"
 version = "0.1.0"
 authors = ["0xnulll.ust"]
-edition = "2021"
+edition = "2018"
 
 exclude = [
   # Those files are cosmwasm-opt artifacts. You might want to commit them for convenience but they should not be part of the source code publication.
@@ -30,6 +30,8 @@ overflow-checks = true
 # for quicker tests, cargo test --lib
 # for more explicit tests, cargo test --features=backtraces
 backtraces = ["cosmwasm-std/backtraces"]
+default = ["cranelift"]
+cranelift = ["cosmwasm-vm/cranelift"]
 
 [dependencies]
 terra-cosmwasm = "2.2.0"
@@ -42,3 +44,4 @@ thiserror = { version = "1.0.23" }
 
 [dev-dependencies]
 cosmwasm-schema = { version = "0.16.2" }
+cosmwasm-vm = { version = "0.16.2" }

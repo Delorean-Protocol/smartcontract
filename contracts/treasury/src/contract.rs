@@ -3,11 +3,11 @@
 
 use crate::errors::{ContractError, Unauthorized};
 use crate::msg::{
-    ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, AnchorExecuteMsg
+    ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, AnchorExecuteMsg, MigrateMsg
 };
 use crate::state::{Config, config_read, config_update};
 use cosmwasm_std::{
-    to_binary, Addr, BankMsg, Coin, Deps, DepsMut, Env, MessageInfo, QueryResponse,
+    entry_point, to_binary, Addr, BankMsg, Coin, Deps, DepsMut, Env, MessageInfo, QueryResponse,
     Response, StdResult, SubMsg, WasmMsg
 };
 
@@ -40,12 +40,11 @@ pub fn execute(
 }
 
 
-fn transfer_funds(to: &Addr, cns: Vec<Coin>) -> Result<BankMsg, ContractError> {
-    let msg = BankMsg::Send {
+fn transfer_funds(to: &Addr, cns: Vec<Coin>) -> BankMsg {
+    return BankMsg::Send {
         to_address: to.to_string(),
         amount: cns,
     };
-    Ok(msg)
 }
 
 pub fn try_config_update(
@@ -73,10 +72,9 @@ pub fn try_withdraw_fund(
         return Err(Unauthorized {}.build());
     }
     let balance = deps.querier.query_all_balances(&_env.contract.address)?;
-    let fund_msg = transfer_funds(&info.sender, balance)?;
 
     Ok(Response::new()
-    .add_message(fund_msg))
+    .add_message(transfer_funds(&info.sender, balance)))
 }
 
 fn acnchor_deposit(contract_addr : String, coins: Vec<Coin>) -> Result<SubMsg, ContractError> {
@@ -98,7 +96,12 @@ pub fn try_deposit(
 ) -> Result<Response, ContractError> {
     let sent_funds = info.funds.clone();
     let config = config_read(deps.storage).load()?; 
-    acnchor_deposit(config.anchor_smart_contract.clone().to_string(), sent_funds.clone())?;
+    
+    Ok(Response::new().add_submessage(acnchor_deposit(config.anchor_smart_contract.clone().to_string(), sent_funds.clone())?))
+}
+
+#[cfg_attr(not(feature = "library"), entry_point)]
+pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg ) -> Result<Response, ContractError> {
     Ok(Response::default())
 }
 

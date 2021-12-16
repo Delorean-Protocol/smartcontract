@@ -6,13 +6,13 @@ use cosmwasm_vm::testing::{
     instantiate, mock_backend, mock_env, mock_info, mock_instance_options, query, execute, migrate
 };
 use cosmwasm_vm::Instance;
-use delorean_distributer::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, ClaimStatusResponse, QueryMsg, MigrateMsg};
-use delorean_distributer::state::{
-    Config, FUND_STATE, CONFIG, CLAIM_STATE, FundShare
+use delorean_treasury::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg, MigrateMsg};
+use delorean_treasury::state::{
+    Config
 };
-use delorean_distributer::errors::{ ContractError };
+use delorean_treasury::errors::{ ContractError };
 
-static WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/delorean_distributer.wasm");
+static WASM: &[u8] = include_bytes!("../../../target/wasm32-unknown-unknown/release/delorean_treasury.wasm");
  
 #[test]
 fn delorean_distributer_test() {

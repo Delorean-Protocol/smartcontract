@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Uint128};
+use cosmwasm_std::{ Uint128};
 use cw_storage_plus::{ Map, Item };
 pub const CONFIG_KEY: &str = "config";
 pub const FUNDSTATE_KEY: &str = "fund_state";
