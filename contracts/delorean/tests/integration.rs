@@ -1,12 +1,10 @@
-use cosmwasm_std::{coin, from_binary, Attribute, Binary, Coin, ContractResult, Response, Uint128};
+use cosmwasm_std::{coin, from_binary, ContractResult, Response};
 use cosmwasm_vm::testing::{
     execute, instantiate, migrate, mock_backend, mock_env, mock_info, mock_instance_options, query,
 };
 use cosmwasm_vm::Instance;
 use delorean_app::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
-use delorean_app::state::{
-    Config, FundShare, Metadata, NftMetaInfo, RoundInfo, WinnerInfo, WINNER_INFO,
-};
+use delorean_app::state::{Config, FundShare, Metadata, NftMetaInfo, RoundInfo, WinnerInfo};
 
 static WASM: &[u8] =
     include_bytes!("../../../target/wasm32-unknown-unknown/release/delorean_app.wasm");
@@ -21,20 +19,6 @@ fn delorean_distributer_test() {
     let admin_info = mock_info(&admin, &&[coin(150000u128, "uusd")].to_vec());
     let mut user1_info = mock_info(&String::from("user1"), &[coin(10000u128, "uusd")].to_vec());
     let mut user2_info = mock_info(&String::from("user2"), &[coin(10000u128, "uusd")].to_vec());
-
-    let shares = [
-        FundShare {
-            address: user1.clone(),
-            note: "treasury".to_string(),
-            share: 2000u32, //20.00
-        },
-        FundShare {
-            address: user2.clone(),
-            note: "team".to_string(),
-            share: 4000u32, //40.00
-        },
-    ]
-    .to_vec();
 
     let config = Config {
         admin: admin.clone(),
@@ -103,7 +87,7 @@ fn delorean_distributer_test() {
     let (instance_options, memory_limit) = mock_instance_options();
     let mut deps = Instance::from_code(WASM, backend, instance_options, memory_limit).unwrap();
     // make sure we can instantiate with this
-    let res: ContractResult<Response> =
+    let _res: ContractResult<Response> =
         instantiate(&mut deps, mock_env(), admin_info.clone(), instatiate_msg);
     let rsp = query(&mut deps, mock_env(), QueryMsg::Config {}).unwrap();
     let config_rsp: ConfigResponse = from_binary(&rsp).unwrap();

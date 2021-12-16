@@ -1,7 +1,5 @@
-use std::ops::{Add, Mul};
-
 use cosmwasm_std::{
-    coin, from_binary, Addr, Attribute, Binary, ContractResult, OwnedDeps, Response, Uint128,
+    coin, from_binary, ContractResult, Response,
 };
 use cosmwasm_vm::testing::{
     execute, instantiate, migrate, mock_backend, mock_env, mock_info, mock_instance_options, query,
@@ -17,8 +15,6 @@ static WASM: &[u8] =
 fn delorean_distributer_test() {
     let backend = mock_backend(&[]);
     let admin = String::from("admin");
-    let user1 = String::from("user1");
-    let user2 = String::from("user2");
 
     let admin_info = mock_info(&admin, &&[coin(150000u128, "uusd")].to_vec());
     let user1_info = mock_info(&String::from("user1"), &[coin(10000u128, "uusd")].to_vec());
@@ -35,7 +31,7 @@ fn delorean_distributer_test() {
     let (instance_options, memory_limit) = mock_instance_options();
     let mut deps = Instance::from_code(WASM, backend, instance_options, memory_limit).unwrap();
     // make sure we can instantiate with this
-    let res: ContractResult<Response> =
+    let _res: ContractResult<Response> =
         instantiate(&mut deps, mock_env(), admin_info.clone(), instatiate_msg);
     let rsp = query(&mut deps, mock_env(), QueryMsg::Config {}).unwrap();
     let config_rsp: ConfigResponse = from_binary(&rsp).unwrap();

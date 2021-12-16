@@ -63,7 +63,7 @@ fn delorean_distributer_test() {
     let (instance_options, memory_limit) = mock_instance_options();
     let mut deps = Instance::from_code(WASM, backend, instance_options, memory_limit).unwrap();
     // make sure we can instantiate with this
-    let res: ContractResult<Response> =
+    let _res: ContractResult<Response> =
         instantiate(&mut deps, mock_env(), admin_info.clone(), instatiate_msg);
     let rsp = query(&mut deps, mock_env(), QueryMsg::Config {}).unwrap();
     let config_rsp: ConfigResponse = from_binary(&rsp).unwrap();

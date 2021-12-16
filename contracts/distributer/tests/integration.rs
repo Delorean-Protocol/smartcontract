@@ -1,17 +1,12 @@
-use std::ops::{Add, Mul};
-
-use cosmwasm_std::{
-    coin, from_binary, Addr, Attribute, Binary, ContractResult, OwnedDeps, Response, Uint128,
-};
+use cosmwasm_std::{coin, from_binary, Attribute, Binary, ContractResult, Response, Uint128};
 use cosmwasm_vm::testing::{
     execute, instantiate, migrate, mock_backend, mock_env, mock_info, mock_instance_options, query,
 };
 use cosmwasm_vm::Instance;
-use delorean_distributer::errors::ContractError;
 use delorean_distributer::msg::{
     ClaimStatusResponse, ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg,
 };
-use delorean_distributer::state::{Config, FundShare, CLAIM_STATE, CONFIG, FUND_STATE};
+use delorean_distributer::state::{Config, FundShare};
 
 static WASM: &[u8] =
     include_bytes!("../../../target/wasm32-unknown-unknown/release/delorean_distributer.wasm");
@@ -52,7 +47,7 @@ fn delorean_distributer_test() {
     let (instance_options, memory_limit) = mock_instance_options();
     let mut deps = Instance::from_code(WASM, backend, instance_options, memory_limit).unwrap();
     // make sure we can instantiate with this
-    let res: ContractResult<Response> =
+    let _res: ContractResult<Response> =
         instantiate(&mut deps, mock_env(), admin_info.clone(), instatiate_msg);
     let rsp = query(&mut deps, mock_env(), QueryMsg::Config {}).unwrap();
     let config_rsp: ConfigResponse = from_binary(&rsp).unwrap();
