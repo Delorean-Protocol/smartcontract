@@ -14,6 +14,7 @@ pub enum ExecuteMsg {
     WinnerUpdate { winner: WinnerInfo },
     RoundUpdate { round_info: RoundInfo },
     ClaimPrize { burn_nft_id: String },
+    Degen { burn_nft_id: String },
     Mint { nft_type: u32 },
 }
 
@@ -48,6 +49,7 @@ pub enum QueryMsg {
     Config {},
     Winners {},
     RoundInfo {},
+    DegenInfo {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -63,4 +65,9 @@ pub struct WinnersResponse {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct RoundInfoResponse {
     pub round: Option<RoundInfo>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct DegenInfoResponse {
+    pub wallets: Vec<String>,
 }

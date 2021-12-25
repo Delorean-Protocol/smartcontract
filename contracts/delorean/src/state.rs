@@ -2,11 +2,13 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{Coin, Uint128};
-use cw_storage_plus::Item;
+use cw_storage_plus::{Item, Map};
 
 const CONFIG_KEY: &str = "config_1sd&23";
 const WINNERS_KEY: &str = "winners_1gasd2";
 const ROUNDINFO_KEY: &str = "round_info_12fas";
+const DEGEN_KEY: &str = "degen_state_12fas";
+const NFT2_FUNDS_KEY: &str = "nft2_funds_14fas";
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
@@ -77,3 +79,5 @@ pub struct WinnerInfo {
 pub const CONFIG: Item<Config> = Item::new(CONFIG_KEY);
 pub const ROUND_INFO: Item<RoundInfo> = Item::new(ROUNDINFO_KEY);
 pub const WINNER_INFO: Item<WinnerInfo> = Item::new(WINNERS_KEY);
+pub const DEGEN_INFO: Map<String, bool> = Map::new(DEGEN_KEY);
+pub const NFT2_FUNDS: Item<Uint128> = Item::new(NFT2_FUNDS_KEY);

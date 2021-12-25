@@ -1,4 +1,5 @@
 use crate::state::Config;
+use cosmwasm_std::Uint128;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -12,6 +13,7 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     Deposit {},
     ConfigUpdate { config: Config },
+    AnchorWithdraw { amount: Uint128 },
     WithdrawFund {},
 }
 

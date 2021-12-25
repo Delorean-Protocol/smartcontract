@@ -40,6 +40,12 @@ serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 snafu = { version = "0.6.3" }
 thiserror = { version = "1.0.23" }
 cw-storage-plus = { version = "0.9.1" }
+moneymarket = { version = "0.3.0" }
+terra-cosmwasm = { version = "2.2.0" }
+cw20 = { version = "0.8.1" }
+[dependencies.cosmwasm-bignumber]
+version = "2.2.0"
+
 
 [dev-dependencies]
 cosmwasm-schema = { version = "0.16.2" }

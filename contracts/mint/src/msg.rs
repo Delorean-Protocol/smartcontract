@@ -19,6 +19,7 @@ pub enum ExecuteMsg {
         token_uri: String,
         extension: Metadata,
     },
+    MoveFunds {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

@@ -7,6 +7,7 @@ const CONFIG_KEY: &str = "config";
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub admin: String,
+    pub aust_contract: String,
     pub anchor_smart_contract: String,
 }
 

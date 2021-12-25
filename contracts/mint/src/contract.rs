@@ -7,9 +7,10 @@ use crate::msg::{
 };
 use crate::state::{Config, Metadata, MintStatus, CONFIG, MINTSTATUS};
 use cosmwasm_std::{
-    coins, entry_point, to_binary, Coin, Deps, DepsMut, Env, MessageInfo, QueryResponse, Response,
+    coin, entry_point, to_binary, Coin, Deps, DepsMut, Env, MessageInfo, QueryResponse, Response,
     StdResult, SubMsg, WasmMsg,
 };
+use moneymarket::querier::deduct_tax;
 
 pub fn instantiate(
     deps: DepsMut,
@@ -40,6 +41,8 @@ pub fn execute(
             token_uri,
             extension,
         } => try_secure_mint(deps, env, info, owner, token_uri, extension),
+
+        ExecuteMsg::MoveFunds {} => try_move_funds(deps, env, info),
     }
 }
 
@@ -89,6 +92,30 @@ pub fn try_config_update(
     Ok(Response::default())
 }
 
+pub fn try_move_funds(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    if info.sender != config.admin {
+        return Err(Unauthorized {}.build());
+    }
+    let balance = deps.querier.query_balance(&_env.contract.address, "uusd")?;
+    let mut msgs: Vec<SubMsg> = vec![];
+    for fund_share in config.shares {
+        let amount = fund_share.get_share(balance.clone().amount).u128();
+        msgs.push(deposit_funds(
+            fund_share.address.clone(),
+            vec![deduct_tax(deps.as_ref(), coin(amount, "uusd"))?],
+        )?);
+    }
+
+    Ok(Response::default()
+        .add_submessages(msgs)
+        .add_attribute("action", "move_funds"))
+}
+
 pub fn try_mint(deps: DepsMut, _env: Env, info: MessageInfo) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     let sent_funds = info.funds.clone();
@@ -121,19 +148,9 @@ pub fn try_mint(deps: DepsMut, _env: Env, info: MessageInfo) -> Result<Response,
         "".to_string(),
     )?;
 
-    let mut msgs: Vec<SubMsg> = vec![];
-    msgs.push(submsg);
-    for fund_share in config.shares {
-        let amount = fund_share.get_share(sent_funds[0].clone().amount).u128();
-        msgs.push(deposit_funds(
-            fund_share.address.clone(),
-            coins(amount, sent_funds[0].clone().denom),
-        )?);
-    }
-
     MINTSTATUS.save(deps.storage, &mintstatus)?;
     Ok(Response::default()
-        .add_submessages(msgs)
+        .add_submessage(submsg)
         .add_attribute("action", "mint_nft_1")
         .add_attribute("token_id", token_id.clone().to_string()))
 }
@@ -155,17 +172,16 @@ pub fn try_secure_mint(
     let token_id = mintstatus.mint_count + 1;
     mintstatus.mint_count = token_id;
 
-    mint_nft(
-        owner.clone(),
-        token_id.clone().to_string(),
-        config.nft_contract.clone(),
-        &extension,
-        token_uri,
-    )?;
-
     MINTSTATUS.save(deps.storage, &mintstatus)?;
 
     Ok(Response::default()
+        .add_submessage(mint_nft(
+            owner.clone(),
+            token_id.clone().to_string(),
+            config.nft_contract.clone(),
+            &extension,
+            token_uri,
+        )?)
         .add_attribute("action", "secure_mint_nft")
         .add_attribute("token_id", token_id.clone().to_string()))
 }

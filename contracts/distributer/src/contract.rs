@@ -4,9 +4,10 @@ use crate::msg::{
 };
 use crate::state::{Config, CLAIM_STATE, CONFIG, FUND_STATE};
 use cosmwasm_std::{
-    coins, entry_point, to_binary, Addr, BankMsg, Coin, Deps, DepsMut, Env, MessageInfo,
+    coin, entry_point, to_binary, Addr, BankMsg, Coin, Deps, DepsMut, Env, MessageInfo,
     QueryResponse, Response, StdResult, Uint128,
 };
+use moneymarket::querier::deduct_tax;
 
 pub fn instantiate(
     deps: DepsMut,
@@ -92,7 +93,13 @@ pub fn try_claim(deps: DepsMut, _env: Env, info: MessageInfo) -> Result<Response
             .add_attribute("action", "claim")
             .add_attribute("ust", claimable_ust.to_string())
             .add_attribute("wallet", wallet.clone().to_string())
-            .add_message(transfer_funds(&wallet, coins(claimable_ust.u128(), "uusd"))))
+            .add_message(transfer_funds(
+                &wallet,
+                vec![deduct_tax(
+                    deps.as_ref(),
+                    coin(claimable_ust.u128(), "uusd"),
+                )?],
+            )))
     }
 }
 

@@ -1,3 +1,5 @@
+use std::vec;
+
 use crate::errors::{ContractError, Unauthorized};
 use crate::msg::{
     AnchorExecuteMsg, ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg,
@@ -5,8 +7,11 @@ use crate::msg::{
 use crate::state::{Config, CONFIG};
 use cosmwasm_std::{
     entry_point, to_binary, Addr, BankMsg, Coin, Deps, DepsMut, Env, MessageInfo, QueryResponse,
-    Response, StdResult, SubMsg, WasmMsg,
+    Response, StdResult, SubMsg, Uint128, WasmMsg,
 };
+use cw20::Cw20ExecuteMsg;
+use moneymarket::market::Cw20HookMsg;
+use moneymarket::querier::deduct_tax;
 
 pub fn instantiate(
     deps: DepsMut,
@@ -28,6 +33,7 @@ pub fn execute(
         ExecuteMsg::ConfigUpdate { config } => try_config_update(deps, env, info, config),
 
         ExecuteMsg::Deposit {} => try_deposit(deps, env, info),
+        ExecuteMsg::AnchorWithdraw { amount } => try_anchor_withdraw(deps, env, info, amount),
         ExecuteMsg::WithdrawFund {} => try_withdraw_fund(deps, env, info),
     }
 }
@@ -54,6 +60,34 @@ pub fn try_config_update(
     Ok(Response::default())
 }
 
+pub fn try_anchor_withdraw(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    amount: Uint128,
+) -> Result<Response, ContractError> {
+    let config = CONFIG.load(deps.storage)?;
+    if info.sender != config.admin {
+        return Err(Unauthorized {}.build());
+    }
+    // let balance = query_token_balance(deps.as_ref(), Addr::unchecked(config.clone().aust_contract), _env.clone().contract.address )?;
+
+    let msg = Cw20ExecuteMsg::Send {
+        contract: config.clone().anchor_smart_contract,
+        amount: amount,
+        msg: to_binary(&Cw20HookMsg::RedeemStable {})?,
+    };
+    let exec = SubMsg::new(WasmMsg::Execute {
+        contract_addr: config.clone().aust_contract,
+        msg: to_binary(&msg)?,
+        funds: vec![],
+    });
+
+    Ok(Response::default()
+        .add_submessage(exec)
+        .add_attribute("action", "anchor_withdraw"))
+}
+
 pub fn try_withdraw_fund(
     deps: DepsMut,
     _env: Env,
@@ -63,9 +97,12 @@ pub fn try_withdraw_fund(
     if info.sender != config_state.admin {
         return Err(Unauthorized {}.build());
     }
-    let balance = deps.querier.query_all_balances(&_env.contract.address)?;
+    let balance = deps.querier.query_balance(&_env.contract.address, "uusd")?;
 
-    Ok(Response::new().add_message(transfer_funds(&info.sender, balance)))
+    Ok(Response::new().add_message(transfer_funds(
+        &info.sender,
+        vec![deduct_tax(deps.as_ref(), balance)?],
+    )))
 }
 
 fn acnchor_deposit(contract_addr: String, coins: Vec<Coin>) -> Result<SubMsg, ContractError> {
@@ -82,10 +119,18 @@ pub fn try_deposit(deps: DepsMut, _env: Env, info: MessageInfo) -> Result<Respon
     let sent_funds = info.funds.clone();
     let config = CONFIG.load(deps.storage)?;
 
-    Ok(Response::new().add_submessage(acnchor_deposit(
-        config.anchor_smart_contract.clone().to_string(),
-        sent_funds.clone(),
-    )?))
+    Ok(Response::new()
+        .add_submessage(acnchor_deposit(
+            config.anchor_smart_contract.clone().to_string(),
+            vec![deduct_tax(
+                deps.as_ref(),
+                deduct_tax(deps.as_ref(), Coin {
+                    denom: "uusd".to_string(),
+                    amount: sent_funds[0].amount,
+                })?,
+            )?],
+        )?)
+        .add_attribute("action", "treasury_deposit"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
