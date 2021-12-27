@@ -1,17 +1,18 @@
-use cosmwasm_std::{coin, from_binary, Attribute, ContractResult, Response};
+use cosmwasm_std::{coin, from_binary, Attribute, ContractResult, Response, Empty};
 use cosmwasm_vm::testing::{
-    execute, instantiate, mock_backend, mock_env, mock_info, mock_instance_options, query,
+    execute, instantiate, mock_env, mock_info, mock_instance_options, query,
 };
 use cosmwasm_vm::Instance;
 use delorean_mint::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use delorean_mint::state::{Config, FundShare, Metadata};
+use mock_tax::mock_dependencies::mock_dependencies_with_custom_querier;
 // const DEFAULT_QUERY_GAS_LIMIT: u64 = 300_000;
 static WASM: &[u8] =
     include_bytes!("../../../target/wasm32-unknown-unknown/release/delorean_mint.wasm");
 
 #[test]
 fn delorean_distributer_test() {
-    let backend = mock_backend(&[]);
+    let backend = mock_dependencies_with_custom_querier(&[]);
     let admin = String::from("admin");
     let treasury = String::from("tressury");
     let team_fund = String::from("team_fund");
@@ -217,4 +218,15 @@ fn delorean_distributer_test() {
         },
     );
     assert_eq!(rsp.is_err(), true);
+
+    let rsp: ContractResult<Response> = execute(
+        &mut deps,
+        mock_env(),
+        admin_info.clone(),
+        ExecuteMsg::MoveFunds {
+        },
+    );
+
+    dbg!(rsp.clone().unwrap());
+    assert_eq!(rsp.is_err(), false, "Admin should be able to move funds to treasury and distributer");
 }
