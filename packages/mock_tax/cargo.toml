@@ -1,0 +1,26 @@
+
+   
+[package]
+name = "mock_tax"
+version = "0.1.0"
+authors = ["0xnulll"]
+edition = "2018"
+description = "Common helpers integreation test"
+license = "Apache-2.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+bench = false
+
+[features]
+# for quicker tests, cargo test --lib
+# for more explicit tests, cargo test --features=backtraces
+backtraces = ["cosmwasm-std/backtraces"]
+default = ["cranelift"]
+cranelift = ["cosmwasm-vm/cranelift"]
+
+[dependencies]
+terra-cosmwasm = "2.2.0"
+cosmwasm-std = "0.16.0"
+cosmwasm-vm = { version = "0.16.2" }

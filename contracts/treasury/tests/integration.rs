@@ -1,8 +1,8 @@
 use cosmwasm_std::{coin, from_binary, ContractResult, Response};
-use cosmwasm_vm::testing::{
-    execute, instantiate, migrate, mock_backend, mock_env, mock_info, mock_instance_options, query,
+use cosmwasm_vm::{
+    testing::{execute, instantiate, migrate, mock_env, mock_info, mock_instance_options, query},
+    Instance,
 };
-use cosmwasm_vm::Instance;
 use delorean_treasury::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg};
 use delorean_treasury::state::Config;
 
@@ -12,7 +12,7 @@ static WASM: &[u8] =
 #[test]
 #[cfg(test)]
 fn delorean_treasury_test() {
-    let backend = mock_backend(&[]);
+    let backend = mock_tax::mock_dependencies::mock_dependencies_with_custom_querier(&[]);
     let admin = String::from("admin");
 
     let admin_info = mock_info(&admin, &&[coin(150000u128, "uusd")].to_vec());
@@ -52,12 +52,8 @@ fn delorean_treasury_test() {
         user1_info.clone(),
         ExecuteMsg::Deposit {},
     );
-    dbg!(rsp.clone().unwrap_err());
-    assert_eq!(
-        rsp.unwrap_err(),
-        "StdError: Generic error: Querier system error: Unsupported query type: custom"
-    );
+    assert_eq!(rsp.is_err(), false, "Treasury deposit should work");
 
     let rsp: ContractResult<Response> = migrate(&mut deps, mock_env(), MigrateMsg {});
-    assert_eq!(rsp.is_err(), false);
+    assert_eq!(rsp.is_err(), false, "Migrate should work");
 }

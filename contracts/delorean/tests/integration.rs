@@ -1,19 +1,20 @@
 use cosmwasm_std::{coin, from_binary, ContractResult, Response};
 use cosmwasm_vm::testing::{
-    execute, instantiate, migrate, mock_backend, mock_env, mock_info, mock_instance_options, query,
+    execute, instantiate, migrate, mock_env, mock_info, mock_instance_options, query,
 };
 use cosmwasm_vm::Instance;
 use delorean_app::msg::{
     ConfigResponse, DegenInfoResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg,
 };
 use delorean_app::state::{Config, FundShare, Metadata, NftMetaInfo, RoundInfo, WinnerInfo};
+use mock_tax::mock_dependencies::mock_dependencies_with_custom_querier;
 
 static WASM: &[u8] =
     include_bytes!("../../../target/wasm32-unknown-unknown/release/delorean_app.wasm");
 
 #[test]
 fn delorean_distributer_test() {
-    let backend = mock_backend(&[]);
+    let backend = mock_dependencies_with_custom_querier(&[coin(900000000u128, "uusd".to_string())]);
     let admin = String::from("admin");
     let user1 = String::from("user1");
     let user2 = String::from("user2");
@@ -255,7 +256,7 @@ fn delorean_distributer_test() {
         "Claim prize should fail for expired time"
     );
 
-    let rsp: ContractResult<Response> = execute(
+    let _rsp: ContractResult<Response> = execute(
         &mut deps,
         mock_env(),
         admin_info.clone(),
@@ -282,7 +283,7 @@ fn delorean_distributer_test() {
         "Claim prize should fail for already claimed"
     );
 
-    let rsp: ContractResult<Response> = execute(
+    let _rsp: ContractResult<Response> = execute(
         &mut deps,
         mock_env(),
         admin_info.clone(),
@@ -303,10 +304,7 @@ fn delorean_distributer_test() {
             burn_nft_id: "1".to_string(),
         },
     );
-    assert_eq!(
-        rsp.unwrap_err(),
-        "StdError: Generic error: Querier system error: Unsupported query type: custom"
-    );
+    assert_eq!(rsp.is_err(), false, "Claim prize should work");
 
     let rsp: ContractResult<Response> = execute(
         &mut deps,

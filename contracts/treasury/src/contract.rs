@@ -124,10 +124,13 @@ pub fn try_deposit(deps: DepsMut, _env: Env, info: MessageInfo) -> Result<Respon
             config.anchor_smart_contract.clone().to_string(),
             vec![deduct_tax(
                 deps.as_ref(),
-                deduct_tax(deps.as_ref(), Coin {
-                    denom: "uusd".to_string(),
-                    amount: sent_funds[0].amount,
-                })?,
+                deduct_tax(
+                    deps.as_ref(),
+                    Coin {
+                        denom: "uusd".to_string(),
+                        amount: sent_funds[0].amount,
+                    },
+                )?,
             )?],
         )?)
         .add_attribute("action", "treasury_deposit"))

@@ -1,19 +1,20 @@
 use cosmwasm_std::{coin, from_binary, Attribute, Binary, ContractResult, Response, Uint128};
 use cosmwasm_vm::testing::{
-    execute, instantiate, migrate, mock_backend, mock_env, mock_info, mock_instance_options, query,
+    execute, instantiate, migrate, mock_env, mock_info, mock_instance_options, query,
 };
 use cosmwasm_vm::Instance;
 use delorean_distributer::msg::{
     ClaimStatusResponse, ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg,
 };
 use delorean_distributer::state::{Config, FundShare};
+use mock_tax::mock_dependencies::mock_dependencies_with_custom_querier;
 
 static WASM: &[u8] =
     include_bytes!("../../../target/wasm32-unknown-unknown/release/delorean_distributer.wasm");
 
 #[test]
 fn delorean_distributer_test() {
-    let backend = mock_backend(&[]);
+    let backend = mock_dependencies_with_custom_querier(&[]);
     let admin = String::from("admin");
     let user1 = String::from("user1");
     let user2 = String::from("user2");
@@ -120,7 +121,7 @@ fn delorean_distributer_test() {
         user1_info.clone(),
         ExecuteMsg::Claim {},
     );
-    assert_eq!(rsp.is_err(), false);
+    assert_eq!(rsp.is_err(), false, "User 1 should be able to claim");
 
     assert_eq!(
         rsp.unwrap().attributes.clone(),

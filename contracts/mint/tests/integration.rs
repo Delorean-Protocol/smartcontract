@@ -1,4 +1,4 @@
-use cosmwasm_std::{coin, from_binary, Attribute, ContractResult, Response, Empty};
+use cosmwasm_std::{coin, from_binary, Attribute, ContractResult, Response};
 use cosmwasm_vm::testing::{
     execute, instantiate, mock_env, mock_info, mock_instance_options, query,
 };
@@ -223,10 +223,13 @@ fn delorean_distributer_test() {
         &mut deps,
         mock_env(),
         admin_info.clone(),
-        ExecuteMsg::MoveFunds {
-        },
+        ExecuteMsg::MoveFunds {},
     );
 
     dbg!(rsp.clone().unwrap());
-    assert_eq!(rsp.is_err(), false, "Admin should be able to move funds to treasury and distributer");
+    assert_eq!(
+        rsp.is_err(),
+        false,
+        "Admin should be able to move funds to treasury and distributer"
+    );
 }
