@@ -65,7 +65,7 @@ fn delorean_distributer_test() {
     let rsp: ContractResult<Response> = execute(
         &mut deps,
         mock_env(),
-        user1_info.clone(),
+        mock_info(&user1, &[coin(100_000_000u128, "uusd")].to_vec()),
         ExecuteMsg::Deposit {},
     );
     assert_eq!(rsp.is_err(), false);
@@ -83,9 +83,9 @@ fn delorean_distributer_test() {
     .unwrap();
     let rsp: ClaimStatusResponse = from_binary(&rsp).unwrap();
     let expected = ClaimStatusResponse {
-        claimable_ust: Uint128::from(2000u32),
-        claimed_ust: None,
-        total_ust: Uint128::from(10000u32),
+        claimable_ust: Uint128::from(20_000_000u128),
+        claimed_ust: Some(Uint128::zero()),
+        total_ust: Uint128::from(100_000_000u128),
         share: 2000u32,
     };
     assert_eq!(
@@ -104,9 +104,9 @@ fn delorean_distributer_test() {
     .unwrap();
     let rsp: ClaimStatusResponse = from_binary(&rsp).unwrap();
     let expected = ClaimStatusResponse {
-        claimable_ust: Uint128::from(4000u32),
-        claimed_ust: None,
-        total_ust: Uint128::from(10000u32),
+        claimable_ust: Uint128::from(40_000_000u128),
+        claimed_ust: Some(Uint128::zero()),
+        total_ust: Uint128::from(100_000_000u128),
         share: 4000u32,
     };
     assert_eq!(
@@ -118,7 +118,7 @@ fn delorean_distributer_test() {
     let rsp: ContractResult<Response> = execute(
         &mut deps,
         mock_env(),
-        user1_info.clone(),
+        mock_info(&user1, &[].to_vec()),
         ExecuteMsg::Claim {},
     );
     assert_eq!(rsp.is_err(), false, "User 1 should be able to claim");
@@ -132,7 +132,7 @@ fn delorean_distributer_test() {
             },
             Attribute {
                 key: "ust".to_string(),
-                value: "2000".to_string()
+                value: "20000000".to_string()
             },
             Attribute {
                 key: "wallet".to_string(),
@@ -154,8 +154,8 @@ fn delorean_distributer_test() {
     let rsp: ClaimStatusResponse = from_binary(&rsp).unwrap();
     let expected = ClaimStatusResponse {
         claimable_ust: Uint128::from(0u32),
-        claimed_ust: Some(Uint128::from(10000u32)),
-        total_ust: Uint128::from(10000u32),
+        claimed_ust: Some(Uint128::from(20_000_000u128)),
+        total_ust: Uint128::from(100_000_000u128),
         share: 2000u32,
     };
     assert_eq!(
@@ -167,7 +167,7 @@ fn delorean_distributer_test() {
     let rsp: ContractResult<Response> = execute(
         &mut deps,
         mock_env(),
-        admin_info.clone(),
+        mock_info(&admin, &[coin(100_000_000u128, "uusd")].to_vec()),
         ExecuteMsg::Deposit {},
     );
     assert_eq!(rsp.is_err(), false);
@@ -182,9 +182,9 @@ fn delorean_distributer_test() {
     .unwrap();
     let rsp: ClaimStatusResponse = from_binary(&rsp).unwrap();
     let expected = ClaimStatusResponse {
-        claimable_ust: Uint128::from(30000u32),
-        claimed_ust: Some(Uint128::from(10000u32)),
-        total_ust: Uint128::from(160000u32),
+        claimable_ust: Uint128::from(20_000_000u128),
+        claimed_ust: Some(Uint128::from(20_000_000u128)),
+        total_ust: Uint128::from(200_000_000u128),
         share: 2000u32,
     };
     assert_eq!(
@@ -203,10 +203,63 @@ fn delorean_distributer_test() {
     .unwrap();
     let rsp: ClaimStatusResponse = from_binary(&rsp).unwrap();
     let expected = ClaimStatusResponse {
-        claimable_ust: Uint128::from(64000u32),
-        claimed_ust: None,
-        total_ust: Uint128::from(160000u32),
+        claimable_ust: Uint128::from(80_000_000u128),
+        claimed_ust: Some(Uint128::from(0u128)),
+        total_ust: Uint128::from(200_000_000u128),
         share: 4000u32,
+    };
+    assert_eq!(
+        rsp, expected,
+        "Claimable UST of user 2 after 2nd deposit should match rsp={:?}",
+        expected
+    );
+
+    let rsp: ContractResult<Response> = execute(
+        &mut deps,
+        mock_env(),
+        mock_info(&user1, &[].to_vec()),
+        ExecuteMsg::Claim {},
+    );
+    assert_eq!(
+        rsp.is_err(),
+        false,
+        "User 1 should be able to claim 2nd time"
+    );
+
+    assert_eq!(
+        rsp.unwrap().attributes.clone(),
+        [
+            Attribute {
+                key: "action".to_string(),
+                value: "claim".to_string()
+            },
+            Attribute {
+                key: "ust".to_string(),
+                value: "20000000".to_string()
+            },
+            Attribute {
+                key: "wallet".to_string(),
+                value: "user1".to_string()
+            }
+        ]
+        .to_vec(),
+        "User 1 should have 2000 ust in the wallet after claim"
+    );
+
+    let rsp: Binary = query(
+        &mut deps,
+        mock_env(),
+        QueryMsg::ClaimStatus {
+            wallet: user1.clone(),
+        },
+    )
+    .unwrap();
+    let rsp: ClaimStatusResponse = from_binary(&rsp).unwrap();
+    let expected = ClaimStatusResponse {
+        claimable_ust: Uint128::from(0u128),
+        claimed_ust: Some(Uint128::from(40_000_000u128)),
+        total_ust: Uint128::from(200_000_000u128),
+        share: 2000u32,
     };
     assert_eq!(
         rsp, expected,

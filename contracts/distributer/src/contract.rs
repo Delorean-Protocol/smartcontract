@@ -37,6 +37,9 @@ pub fn execute(
 
         ExecuteMsg::Deposit {} => try_deposit(deps, env, info),
         ExecuteMsg::Claim {} => try_claim(deps, env, info),
+        ExecuteMsg::AdminClaimUpdate { wallet, amount } => {
+            try_claim_update(deps, env, info, wallet, amount)
+        }
     }
 }
 
@@ -58,6 +61,22 @@ pub fn try_config_update(
         return Err(Unauthorized {}.build());
     }
     CONFIG.save(deps.storage, &new_config)?;
+
+    Ok(Response::default())
+}
+
+pub fn try_claim_update(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    wallet: String,
+    amount: Uint128,
+) -> Result<Response, ContractError> {
+    let mut _config = CONFIG.load(deps.storage)?;
+    if info.sender != _config.admin {
+        return Err(Unauthorized {}.build());
+    }
+    CLAIM_STATE.save(deps.storage, &wallet.to_string(), &amount)?;
 
     Ok(Response::default())
 }
@@ -87,7 +106,7 @@ pub fn try_claim(deps: DepsMut, _env: Env, info: MessageInfo) -> Result<Response
         }
         let share = found.unwrap();
         claimable_ust = share.get_share(claimable);
-        CLAIM_STATE.save(deps.storage, &wallet.to_string(), &claimable)?;
+        CLAIM_STATE.save(deps.storage, &wallet.to_string(), &funds)?;
 
         Ok(Response::new()
             .add_attribute("action", "claim")
@@ -153,14 +172,18 @@ fn get_claim_status(deps: Deps, _env: Env, wallet: String) -> StdResult<QueryRes
         let funds = FUND_STATE.load(deps.storage)?;
         let claimed_ust = CLAIM_STATE.may_load(deps.storage, &wallet)?;
         let mut claimable: Uint128 = funds.clone();
+        let mut t: Uint128 = Uint128::zero();
         match claimed_ust {
             None => {}
-            Some(claimed_ust) => claimable = claimable - claimed_ust,
+            Some(claimed_ust) => {
+                claimable = claimable - claimed_ust;
+                t = claimed_ust;
+            }
         }
         let share = found.unwrap();
         rsp = ClaimStatusResponse {
-            claimable_ust: share.get_share(claimable),
-            claimed_ust: claimed_ust,
+            claimable_ust: share.clone().get_share(claimable),
+            claimed_ust: Some(share.clone().get_share(t)),
             total_ust: funds.clone(),
             share: share.share,
         };

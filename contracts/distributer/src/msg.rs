@@ -1,3 +1,5 @@
+use std::string;
+
 use crate::state::Config;
 use cosmwasm_std::Uint128;
 use schemars::JsonSchema;
@@ -14,6 +16,7 @@ pub enum ExecuteMsg {
     Deposit {},
     ConfigUpdate { config: Config },
     Claim {},
+    AdminClaimUpdate { wallet: String, amount: Uint128 },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
